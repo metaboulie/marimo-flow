@@ -1,0 +1,199 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap");
+
+h1,
+h2,
+h3 {
+  text-align: center;
+  margin-bottom: 10em;
+  letter-spacing: 0.1em;
+  font-family: "Poppins", sans-serif;
+  border-bottom: 2px solid #ddd;
+  padding-bottom: 10px;
+  text-shadow: 0 0 10px #76c7c0;
+  color: #76c7c0;
+}
+
+h1 {
+  font-size: 2em;
+  font-weight: bolder;
+  text-transform: uppercase;
+}
+
+h2 {
+  font-size: 1.5em;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+h3 {
+  font-size: 1.2em;
+  font-weight: normal;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  overflow: hidden; /* For rounded corners */
+  border-radius: 10px;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.comparison-table th {
+  background-color: #f8f8f8;
+  font-weight: bold;
+  color: #333;
+}
+
+.comparison-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.comparison-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Add hover effect for rows */
+.comparison-table tbody tr:hover {
+  background-color: #e0e0e0;
+  cursor: pointer; /* Optional: Indicate interactivity */
+}
+
+.scenario-table {
+  width: 100%;
+  border-collapse: collapse;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  overflow: hidden; /* For rounded corners on the table */
+  border-radius: 10px;
+}
+
+.scenario-table th,
+.scenario-table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.scenario-table th {
+  background-color: #f8f8f8;
+  font-weight: bold;
+}
+
+.scenario-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.scenario-table tr:last-child td {
+  border-bottom: none;
+}
+
+.scenario-title {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #333;
+}
+
+.scenario-details {
+  color: #555;
+}
+
+.scenario-details ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 5px 0; /* Adjust spacing as needed */
+}
+
+.scenario-details li::before {
+  content: "• ";
+  color: #555;
+  margin-right: 5px;
+}
+
+.terminology-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-gap: 20px;
+}
+
+.terminology-card {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
+}
+
+.terminology-card:hover {
+  transform: translateY(-5px);
+}
+
+.terminology-title {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.terminology-description {
+  color: #555;
+}
+
+.terminology-description ul {
+  list-style-type: none; /* Remove default bullets */
+  padding: 0;
+}
+
+.terminology-description li::before {
+  content: "• "; /* Use a bullet symbol */
+  color: #555; /* Match the text color */
+  margin-right: 5px;
+}
+
+.challenge-container {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(350px, 1fr)
+  ); /* Adjusted width */
+  grid-gap: 20px;
+}
+
+.challenge-card {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
+}
+
+.challenge-card:hover {
+  transform: translateY(-5px); /* Subtle hover effect */
+}
+
+.challenge-title {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.challenge-description {
+  color: #555;
+}
+
+.challenge-description ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.challenge-description li::before {
+  content: "• ";
+  color: #555;
+  margin-right: 5px;
+}

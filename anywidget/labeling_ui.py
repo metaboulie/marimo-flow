@@ -133,11 +133,11 @@ def __(mo):
         show_value=True,
         label="buffer size to split text: ",
     )
-    # buffer_size
+    buffer_size
     return buffer_size,
 
 
-@app.cell(hide_code=True)
+@app.cell
 def __(widget):
     widget
     return

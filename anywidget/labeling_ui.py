@@ -151,11 +151,87 @@ def __(widget):
     return
 
 
+@app.cell(hide_code=True)
+def __(generate_progress_html, json, mo, widget):
+    mo.Html(generate_progress_html(json.loads(widget.result)))
+    return
+
+
 @app.cell
 def __(display_annotations, json, text_chunked, widget):
     result = display_annotations(json.loads(widget.result), text_chunked, False)
     result
     return result,
+
+
+@app.cell
+def __():
+    from typing import Dict, List
+
+
+    def generate_progress_html(result: Dict[str, List[Dict]]) -> str:
+        """
+        Generates an aesthetically pleasing HTML progress bar with progress tracking
+        and centered progress text.
+
+        Args:
+        result (Dict[str, List[Dict]]): A dictionary representing streaming results,
+                                        where each key maps to a list of annotations.
+
+        Returns:
+        str: An HTML string containing the progress bar and centered progress text.
+        """
+
+        # Count non-empty lists
+        total_steps = len(result)
+        completed_steps = sum(
+            1 for k, v in result.items() if v
+        )  # Count non-empty lists
+
+        # Calculate progress percentage
+        progress_percentage = (completed_steps / total_steps) * 100
+
+        # Create the progress text
+        progress_text = f"You've done {completed_steps}/{total_steps}."
+
+        # HTML and CSS for a minimal, aesthetic, and stunning progress bar
+        progress_html = f"""
+        <style>
+            /* Progress bar container */
+            .progress-container {{
+                width: 100%;
+                background-color: #e0e0e0;
+                border-radius: 30px;
+                padding: 2px;
+                height: 8px;  /* Thinner progress bar */
+                margin: 20px auto;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }}
+
+            /* The progress bar itself */
+            .progress-bar {{
+                width: {progress_percentage}%;
+                height: 100%;
+                background-color: #4caf50;  /* Customize the color for any mode */
+                border-radius: 30px;
+                transition: width 0.4s ease;
+            }}
+
+            /* Progress text */
+            .progress-text {{
+                font-size: 12px;
+                text-align: center;
+            }}
+        </style>
+
+        <div class="progress-container">
+            <div class="progress-bar"></div>
+        </div>
+        <p class="progress-text">{progress_text}</p>
+        """
+
+        return progress_html
+    return Dict, List, generate_progress_html
 
 
 @app.cell(hide_code=True)
@@ -273,7 +349,7 @@ def __(pl, px):
     return plot_annotation_counts,
 
 
-@app.cell
+@app.cell(hide_code=True)
 def __():
     import anywidget
     import traitlets

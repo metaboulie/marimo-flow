@@ -84,10 +84,12 @@ def __(generate_label2color, labels):
     return label2color,
 
 
-@app.cell(hide_code=True)
+@app.cell
 def __(MultiTextAnnotationWidget, label2color, mo, text_chunked):
     widget = mo.ui.anywidget(
-        MultiTextAnnotationWidget(data=text_chunked, labels=label2color)
+        MultiTextAnnotationWidget(
+            data=text_chunked, labels=label2color, buffer_size=3
+        )
     )
     return widget,
 
@@ -116,20 +118,26 @@ def __(mo):
     return assist_form,
 
 
-@app.cell(hide_code=True)
+@app.cell
 def __(assist_form, mo, response_df):
     mo.stop(assist_form.value is None)
     response_df
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
+def __(text_chunked):
+    text_chunked[0]
+    return
+
+
+@app.cell
 def __(mo):
     buffer_size = mo.ui.slider(
         0,
         5,
         1,
-        2,
+        0,
         show_value=True,
         label="buffer size to split text: ",
     )
@@ -143,7 +151,7 @@ def __(widget):
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def __(display_annotations, json, text_chunked, widget):
     result = display_annotations(json.loads(widget.result), text_chunked, False)
     result
@@ -265,7 +273,7 @@ def __(pl, px):
     return plot_annotation_counts,
 
 
-@app.cell(hide_code=True)
+@app.cell
 def __():
     import anywidget
     import traitlets
@@ -275,9 +283,21 @@ def __():
     class MultiTextAnnotationWidget(anywidget.AnyWidget):
         _esm = """
         function render({ model, el }) {
-            const data = model.get("data");
+            let data = model.get("data");
             const labels = model.get("labels");
             let currentTextIndex = 0;
+            let bufferSize = model.get("buffer_size");
+
+            model.on("change:data", () => {
+                data = model.get("data");
+                currentTextIndex = 0;
+                updateTextDisplay();
+            });
+
+            model.on("change:buffer_size", () => {
+                bufferSize = model.get("buffer_size");
+                updateTextDisplay();
+            });
 
             // Create a container for the legend
             let legendContainer = document.createElement("div");
@@ -288,6 +308,17 @@ def __():
             let textContainer = document.createElement("div");
             textContainer.className = "text-container";
             el.appendChild(textContainer);
+
+            let beforeBufferContainer = document.createElement("div");
+            beforeBufferContainer.className = "buffer-container before-buffer";
+            let mainTextContainer = document.createElement("div");
+            mainTextContainer.className = "main-text-container";
+            let afterBufferContainer = document.createElement("div");
+            afterBufferContainer.className = "buffer-container after-buffer";
+
+            textContainer.appendChild(beforeBufferContainer);
+            textContainer.appendChild(mainTextContainer);
+            textContainer.appendChild(afterBufferContainer);
 
             // Create navigation buttons
             let navContainer = document.createElement("div");
@@ -353,27 +384,40 @@ def __():
             function updateTextDisplay() {
                 let currentResult = JSON.parse(model.get("result"));
                 let currentAnnotations = currentResult[currentTextIndex] || [];
-                let text = data[currentTextIndex];
 
-                // Update page indicator
-                pageIndicator.textContent = `Task ${currentTextIndex + 1} of ${data.length}`;
+                let bufferBefore = "";
+                let bufferAfter = "";
+                let mainText = data[currentTextIndex];
 
-                // Sort annotations by start position in descending order
-                currentAnnotations.sort((a, b) => b.start - a.start);
+                if (bufferSize > 0) {
+                    for (let i = 1; i <= bufferSize; i++) {
+                        let beforeIndex = currentTextIndex - i;
+                        let afterIndex = currentTextIndex + i;
 
-                // Apply annotations
-                for (let annotation of currentAnnotations) {
-                    let before = text.slice(0, annotation.start);
-                    let annotated = text.slice(annotation.start, annotation.end);
-                    let after = text.slice(annotation.end);
-                    text = before +
-                           `<span class="annotation" style="background-color: ${labels[annotation.label]};" data-id="${annotation.id}" data-label="${annotation.label}">` +
-                           annotated +
-                           '</span>' +
-                           after;
+                        if (beforeIndex >= 0) {
+                            bufferBefore = data[beforeIndex] + "\\n" + bufferBefore;
+                        }
+                        if (afterIndex < data.length) {
+                            bufferAfter += "\\n" + data[afterIndex];
+                        }
+                    }
                 }
 
-                textContainer.innerHTML = text;
+                // Apply annotations only to main text
+                currentAnnotations.sort((a, b) => b.start - a.start);
+
+                for (let annotation of currentAnnotations) {
+                    let before = mainText.slice(0, annotation.start);
+                    let annotated = mainText.slice(annotation.start, annotation.end);
+                    let after = mainText.slice(annotation.end);
+                    mainText = before + `<span class="annotation" style="background-color: ${labels[annotation.label]};" data-id="${annotation.id}" data-label="${annotation.label}">` + annotated + '</span>' + after;
+                    }
+
+                beforeBufferContainer.innerHTML = bufferBefore;
+                mainTextContainer.innerHTML = mainText;
+                afterBufferContainer.innerHTML = bufferAfter;
+
+                pageIndicator.textContent = `Task ${currentTextIndex + 1} of ${data.length}`;
                 updateLegend(currentAnnotations);
             }
 
@@ -397,34 +441,58 @@ def __():
 
             function addAnnotation(label, color) {
                 let selection = getSelectionWithinShadowRoot(textContainer);
-                if (selection && selection.rangeCount > 0) {
-                    let range = selection.getRangeAt(0);
-                    let selectedText = range.toString();
-                    if (selectedText) {
-                        let start = getTextPosition(range.startContainer, range.startOffset);
-                        let end = getTextPosition(range.endContainer, range.endOffset);
 
-                        let annotationId = `${currentTextIndex}-${Date.now()}`;
+                if (selection.rangeCount === 0) return;
 
-                        let currentResult = JSON.parse(model.get("result"));
-                        if (!currentResult[currentTextIndex]) {
-                            currentResult[currentTextIndex] = [];
-                        }
-                        currentResult[currentTextIndex].push({
-                            id: annotationId,
-                            text: selectedText,
-                            label: label,
-                            start: start,
-                            end: end,
-                            note: ""  // Initialize with an empty note
-                        });
-                        model.set("result", JSON.stringify(currentResult));
-                        model.save_changes();
+                let range = selection.getRangeAt(0);
 
-                        updateTextDisplay();
-                        noteTextArea.value = "";  // Clear the text area after adding annotation
-                    }
+                let selectedText = range.toString();
+                let startContainer = range.startContainer;
+                let endContainer = range.endContainer;
+
+                // Ensure the selection is within the main text container
+                if (!mainTextContainer.contains(startContainer) || !mainTextContainer.contains(endContainer)) {
+                    alert("Please select text only within the main text area.");
+                    return;
                 }
+
+                let mainTextContent = mainTextContainer.textContent;
+                let startOffset = getTextOffset(mainTextContainer, range.startContainer, range.startOffset);
+                let endOffset = getTextOffset(mainTextContainer, range.endContainer, range.endOffset);
+
+                let annotationId = `${currentTextIndex}-${Date.now()}`;
+
+                let currentResult = JSON.parse(model.get("result"));
+                if (!currentResult[currentTextIndex]) {
+                    currentResult[currentTextIndex] = [];
+                }
+                currentResult[currentTextIndex].push({
+                    id: annotationId,
+                    text: selectedText,
+                    label: label,
+                    start: startOffset,
+                    end: endOffset,
+                    note: ""  // Initialize with an empty note
+                });
+                model.set("result", JSON.stringify(currentResult));
+                model.save_changes();
+
+                updateTextDisplay();
+                noteTextArea.value = "";  // Clear the text area after adding annotation
+            }
+
+            function getTextOffset(root, node, offset) {
+                let walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+                let currentOffset = 0;
+
+                while (walker.nextNode()) {
+                    if (walker.currentNode === node) {
+                        return currentOffset + offset;
+                    }
+                    currentOffset += walker.currentNode.length;
+                }
+
+                return -1;
             }
 
             function getSelectionWithinShadowRoot(container) {
@@ -501,124 +569,159 @@ def __():
         export default { render };
         """
         _css = """
-    .text-container {
-        border: 1px solid #444;
-        padding: 15px;
-        margin-bottom: 10px;
-        font-family: Arial, sans-serif;
-        font-size: 13px;
-        line-height: 1.5;
-        border-radius: 10px;
-        white-space: pre-wrap;
-        max-width: 600px;
-        margin-left: auto;
-        margin-right: auto;
-    }
+        .text-container {
+            border: 1px solid #444;
+            padding: 15px;
+            margin-bottom: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            line-height: 1.5;
+            border-radius: 10px;
+            white-space: pre-wrap;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
 
-    .legend-container {
-        display: grid;
-        grid-template-columns: 1fr 1fr; /* Two columns for the legend */
-        gap: 10px;
-        margin-top: 10px;
-        padding: 12px;
-        border-radius: 8px;
-        font-size: 12px;
-    }
+        .buffer-container {
+            padding: 15px;
+            font-weight: 200;
+            opacity: 0.6;
+            font-style: italic;
+            border-radius: 8px;
+            margin: 0, 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
 
-    .legend-row {
-        display: flex;
-        align-items: center;
-    }
+        .before-buffer {
+            border-left: 4px solid #3498db;
+        }
 
-    .legend-label {
-        display: flex;
-        align-items: center;
-        margin-right: 10px;
-        width: 144px;
-    }
+        .main-text-container {
+            padding: 20px;
+            font-weight: 600;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #2ecc71;
+        }
 
-    .legend-color {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        margin-right: 5px;
-        border-radius: 50%;
-    }
+        .after-buffer {
+            border-left: 4px solid #e74c3c;
+        }
 
-    .legend-text {
-        font-size: 11px;
-    }
+        .legend-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Two columns for the legend */
+            gap: 10px;
+            margin-top: 10px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
 
-    .label-container, .action-container {
-        margin-bottom: 10px;
-        display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
-        width: 500px;
-        margin-left: auto;
-        margin-right: auto;
-    }
+        .legend-row {
+            display: flex;
+            align-items: center;
+        }
 
-    .nav-container {
-        display: flex;
-        justify-content: space-between;
-        margin: 15px 0;
-        max-width: 600px;
-        margin-left: auto;
-        margin-right: auto;
-        margin-bottom: 10px;
-    }
+        .legend-label {
+            display: flex;
+            align-items: center;
+            margin-right: 10px;
+            width: 144px;
+        }
 
-    .nav-button, .label-button, .action-button {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        padding: 0.6em 1em;
-        margin: 0.3em;
-        cursor: pointer;
-        border-radius: 5px;
-        font-size: 12px;
-        transition: background-color 0.3s;
-    }
+        .legend-color {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin-right: 5px;
+            border-radius: 50%;
+        }
 
-    .nav-button:hover, .label-button:hover, .action-button:hover {
-        background-color: #0056b3;
-    }
+        .legend-text {
+            font-size: 11px;
+        }
 
-    .annotation {
-        cursor: pointer;
-        transition: opacity 0.3s;
-    }
+        .label-container, .action-container {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
 
-    .annotation:hover {
-        opacity: 0.7;
-    }
+        .nav-container {
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            margin: 15px 0;
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 10px;
+        }
 
-    .note-textarea {
-        width: 250px;
-        height: 60px;
-        margin-left: 10px;
-        padding: 5px;
-        font-size: 14px;
-        border-radius: 5px;
-        resize: vertical;
-        border: 1px solid #ccc;
-    }
+        .nav-button, .label-button, .action-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0.6em 1em;
+            margin: 0.3em;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 12px;
+            transition: background-color 0.3s;
+        }
 
-    .page-indicator {
-        font-size: 11px;
-    }
+        .nav-button:hover, .label-button:hover, .action-button:hover {
+            background-color: #0056b3;
+        }
 
+        .annotation {
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .annotation:hover {
+            opacity: 0.7;
+        }
+
+        .note-textarea {
+            width: 250px;
+            height: 60px;
+            margin-left: 10px;
+            padding: 5px;
+            font-size: 14px;
+            border-radius: 5px;
+            resize: vertical;
+            border: 1px solid #ccc;
+        }
+
+        .page-indicator {
+            font-size: 11px;
+        }
         """
         data = traitlets.List().tag(sync=True)
         labels = traitlets.Dict().tag(sync=True)
         result = traitlets.Unicode().tag(sync=True)
+        buffer_size = traitlets.Int(default_value=0).tag(sync=True)
 
-        def __init__(self, data, labels):
+        def __init__(self, data, labels, buffer_size=0):
             super().__init__()
             self.data = data
             self.labels = labels
             self.result = json.dumps({i: [] for i in range(len(data))})
+            self.buffer_size = buffer_size
+
+        @traitlets.observe("data")
+        def _update_result(self, change):
+            self.result = json.dumps({i: [] for i in range(len(self.data))})
+
+        @traitlets.observe("buffer_size")
+        def _update_buffer_size(self, change):
+            pass
     return MultiTextAnnotationWidget, anywidget, json, traitlets
 
 

@@ -118,7 +118,7 @@ def __(mo):
     return assist_form,
 
 
-@app.cell
+@app.cell(hide_code=True)
 def __(assist_form, mo, response_df):
     mo.stop(assist_form.value is None)
     response_df
@@ -131,7 +131,7 @@ def __(text_chunked):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def __(mo):
     buffer_size = mo.ui.slider(
         0,
@@ -164,7 +164,7 @@ def __(display_annotations, json, text_chunked, widget):
     return result,
 
 
-@app.cell
+@app.cell(hide_code=True)
 def __():
     from typing import Dict, List
 
@@ -476,7 +476,26 @@ def __():
                         if (afterIndex < data.length) {
                             bufferAfter += "\\n" + data[afterIndex];
                         }
+                    } 
+
+                    // Show or hide buffer containers based on content
+                    if (bufferBefore.trim()) {
+                        beforeBufferContainer.innerHTML = bufferBefore;
+                        beforeBufferContainer.style.display = "block";
+                    } else {
+                        beforeBufferContainer.style.display = "none";
                     }
+
+                    if (bufferAfter.trim()) {
+                        afterBufferContainer.innerHTML = bufferAfter;
+                        afterBufferContainer.style.display = "block";
+                    } else {
+                        afterBufferContainer.style.display = "none";
+                    }
+                } else {
+                    // Hide buffer containers when bufferSize is 0
+                    beforeBufferContainer.style.display = "none";
+                    afterBufferContainer.style.display = "none";
                 }
 
                 // Apply annotations only to main text
@@ -489,9 +508,7 @@ def __():
                     mainText = before + `<span class="annotation" style="background-color: ${labels[annotation.label]};" data-id="${annotation.id}" data-label="${annotation.label}">` + annotated + '</span>' + after;
                     }
 
-                beforeBufferContainer.innerHTML = bufferBefore;
                 mainTextContainer.innerHTML = mainText;
-                afterBufferContainer.innerHTML = bufferAfter;
 
                 pageIndicator.textContent = `Task ${currentTextIndex + 1} of ${data.length}`;
                 updateLegend(currentAnnotations);

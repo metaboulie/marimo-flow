@@ -1,5 +1,6 @@
 # cache
 __pycache__
+.DS_Store
 
 # files starting with a '+' are in dev
 +*

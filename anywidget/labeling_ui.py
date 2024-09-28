@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.8.15"
+__generated_with = "0.8.17"
 app = marimo.App()
 
 
@@ -53,9 +53,9 @@ def __():
     return re, split_text_into_sentences
 
 
-@app.cell(hide_code=True)
-def __(buffer_size, split_text_into_sentences, text):
-    text_chunked = split_text_into_sentences(text, buffer_size=buffer_size.value)
+@app.cell
+def __(split_buffer_size, split_text_into_sentences, text):
+    text_chunked = split_text_into_sentences(text, buffer_size=split_buffer_size.value // 2)
     return text_chunked,
 
 
@@ -85,10 +85,16 @@ def __(generate_label2color, labels):
 
 
 @app.cell
-def __(MultiTextAnnotationWidget, label2color, mo, text_chunked):
+def __(
+    MultiTextAnnotationWidget,
+    label2color,
+    mo,
+    text_chunked,
+    ui_buffer_size,
+):
     widget = mo.ui.anywidget(
         MultiTextAnnotationWidget(
-            data=text_chunked, labels=label2color, buffer_size=3
+            data=text_chunked, labels=label2color, buffer_size=ui_buffer_size.value
         )
     )
     return widget,
@@ -126,23 +132,25 @@ def __(assist_form, mo, response_df):
 
 
 @app.cell
-def __(text_chunked):
-    text_chunked[0]
-    return
-
-
-@app.cell(hide_code=True)
 def __(mo):
-    buffer_size = mo.ui.slider(
+    split_buffer_size = mo.ui.slider(
+        1,
+        9, 
+        2,
+        1,
+        show_value=True,
+        label="number of sentences you want to label at each page: ",
+    )
+    ui_buffer_size = mo.ui.slider(
         0,
         5,
         1,
-        0,
+        1,
         show_value=True,
-        label="buffer size to split text: ",
+        label="number of sentences you want to see around the current sentence: ",
     )
-    buffer_size
-    return buffer_size,
+    mo.vstack([split_buffer_size, ui_buffer_size], align="center")
+    return split_buffer_size, ui_buffer_size
 
 
 @app.cell

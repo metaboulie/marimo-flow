@@ -1,20 +1,22 @@
 import marimo
 
-__generated_with = "0.8.11"
+__generated_with = "0.8.19"
 app = marimo.App(
-    width="medium",
     app_title="Exploring Parkinson's Disease Diagnosis",
+    css_file="",
 )
 
 
 @app.cell(hide_code=True)
-def __(NOTEBOOK_TITLE, mo):
+def __(header_widget):
+    header_widget
+    return
+
+
+@app.cell(hide_code=True)
+def __(mo):
     mo.md(
         f"""
-        <h1 id="home">{NOTEBOOK_TITLE}</h1>
-        ---
-        [Kaggle Link of the Dataset](https://www.kaggle.com/datasets/vikasukani/parkinsons-disease-data-set)
-
         {mo.accordion({
             "Abstract": mo.md("""Parkinson's Disease (PD) is a neurodegenerative disorder impacting movement and speech. Early and accurate diagnosis is crucial for timely intervention. This study investigates the potential of machine learning to analyze voice recordings for PD detection. We simulate a dataset using a Variational Autoencoder (VAE) to address potential limitations of real-world datasets. Subsequently, we explore various regression models for the task and compare their performance using cross-validation techniques. This report outlines the methodology, analyzes the results, and provides insights into selecting the most suitable model for PD diagnosis based on voice data."""),
 
@@ -324,7 +326,7 @@ def __(mo):
             train_loss.append(avg_loss)  # Append the average loss to the list
 
         return train_loss
-    return train_cvae_model,
+    return (train_cvae_model,)
 
 
 @app.cell(hide_code=True)
@@ -435,7 +437,7 @@ def __(np, random, torch):
             generated_data_with_y = np.hstack((generated_data, y.numpy()))
 
         return generated_data_with_y
-    return generate_conditional_synthetic_data,
+    return (generate_conditional_synthetic_data,)
 
 
 @app.cell(hide_code=True)
@@ -450,7 +452,7 @@ def __(generate_conditional_synthetic_data, latent_dim, model):
     synthetic_data = generate_conditional_synthetic_data(
         model, 500, (0, 1), latent_dim, 2, weights=(1 / 3, 1)
     )
-    return synthetic_data,
+    return (synthetic_data,)
 
 
 @app.cell(hide_code=True)
@@ -490,7 +492,7 @@ def __(np):
             (synthetic_data, np.ones((synthetic_data.shape[0], 1)))
         )
         return labeled_original_data, labeled_synthetic_data
-    return label_data,
+    return (label_data,)
 
 
 @app.cell(hide_code=True)
@@ -527,7 +529,7 @@ def __(np, train_test_split):
         y_test = test_data[:, -1]
 
         return X_train, X_test, y_train, y_test
-    return split_data,
+    return (split_data,)
 
 
 @app.cell(hide_code=True)
@@ -560,7 +562,7 @@ def __(RandomForestClassifier, accuracy_score, np):
         accuracy = accuracy_score(y_test, y_pred)
 
         return accuracy
-    return train_and_evaluate_classifier,
+    return (train_and_evaluate_classifier,)
 
 
 @app.cell(hide_code=True)
@@ -601,7 +603,7 @@ def __(pd, split_data, statistics, train_and_evaluate_classifier):
 
         median_accuracy = statistics.median(accuracies)
         return median_accuracy
-    return repeated_evaluation,
+    return (repeated_evaluation,)
 
 
 @app.cell(hide_code=True)
@@ -817,7 +819,7 @@ def __(mo):
 @app.cell(hide_code=True)
 def __(autoencoder, synthetic_data, transform_data):
     transformed_synthetic_data = transform_data(autoencoder, synthetic_data)
-    return transformed_synthetic_data,
+    return (transformed_synthetic_data,)
 
 
 @app.cell(hide_code=True)
@@ -832,7 +834,7 @@ def __(pd, transformed_synthetic_data):
         transformed_synthetic_data,
         columns=["AE-1", "AE-2", "AE-3", "AE-4", "status"],
     )
-    return df,
+    return (df,)
 
 
 @app.cell(hide_code=True)
@@ -906,15 +908,12 @@ def __(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def __(mo):
     mo.md(
         r"""
         <style>
             body {
-          background-color: #121212;
-          color: #e0e0e0;
-          font-family: 'Poppins', sans-serif;
           margin: 0;
           padding: 0;
         }
@@ -929,10 +928,8 @@ def __(mo):
         }
 
         .section {
-          background-color: #1f1f1f;
           border-radius: 15px;
           padding: 2rem;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
 
         .header {
@@ -942,7 +939,6 @@ def __(mo):
 
         .header h1 {
           font-size: 2.5rem;
-          color: #76c7c0;
           text-shadow: 0 0 10px #76c7c0;
         }
 
@@ -954,7 +950,6 @@ def __(mo):
         }
 
         .model-card {
-          background-color: #2a2a2a;
           padding: 1.5rem;
           border-radius: 12px;
           flex: 1 1 48%;
@@ -967,18 +962,15 @@ def __(mo):
         }
 
         .model-card h2 {
-          color: #ffdc65;
           font-size: 1.5rem;
           margin-bottom: 0.8rem;
         }
 
         .model-card p {
-          color: #e0e0e0;
           line-height: 1.6;
         }
 
         .overall {
-          background-color: #2a2a2a;
           padding: 1.5rem;
           border-radius: 12px;
           box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
@@ -987,13 +979,11 @@ def __(mo):
 
         .overall p {
           font-size: 1.2rem;
-          color: #76c7c0;
         }
 
         .heading {
           text-align: center;
           font-size: 2rem;
-          color: #f29d3b;
           text-shadow: 0 0 6px rgba(255, 136, 0, 0.5);
         }
 
@@ -1005,10 +995,6 @@ def __(mo):
 
         .cross-validation ol li {
           margin-bottom: 1rem;
-        }
-
-        .cross-validation ol li strong {
-          color: #ffdc65;
         }
 
         </style>
@@ -1064,12 +1050,6 @@ def __(mo):
         </div>
         """
     )
-    return
-
-
-@app.cell(hide_code=True)
-def __(mo):
-    mo.md(r"""Coding Time""")
     return
 
 
@@ -1236,7 +1216,7 @@ def __():
         <h1 id="src">Source Code</h1>
         """
     )
-    return mo,
+    return (mo,)
 
 
 @app.cell(hide_code=True)
@@ -1277,7 +1257,7 @@ def __():
 @app.cell(hide_code=True)
 def __():
     from sklearn.linear_model import Lasso
-    return Lasso,
+    return (Lasso,)
 
 
 @app.cell(hide_code=True)
@@ -1285,6 +1265,16 @@ def __():
     import plotly.figure_factory as ff
     import plotly.express as px
     return ff, px
+
+
+@app.cell(hide_code=True)
+def __(mo):
+    import plotly.io as pio
+
+    pio.templates.default = (
+        "plotly_dark" if mo.app_meta().theme == "dark" else "simple_white"
+    )
+    return (pio,)
 
 
 @app.cell(hide_code=True)
@@ -1306,18 +1296,186 @@ def __():
 @app.cell(hide_code=True)
 def __():
     from itertools import product
-    return product,
+    return (product,)
 
 
 @app.cell(hide_code=True)
 def __():
     import polars as pl
-    return pl,
+    return (pl,)
 
 
 @app.cell(hide_code=True)
-def __(mo):
-    mo.md(r"""#### Plotting Functions""")
+def __():
+    import anywidget
+    import traitlets
+
+
+    class HeaderWidget(anywidget.AnyWidget):
+        _esm = """
+        function render({ model, el }) {
+            const result = model.get("result");
+
+            const container = document.createElement("div");
+            container.className = "header-container";
+
+            const banner = document.createElement("img");
+            banner.className = "banner";
+            banner.src = "https://i.ibb.co/SVcC6bb/final.png";
+            banner.style.width = "100%";
+            banner.style.height = "200px";
+            banner.style.objectFit = "cover";
+            banner.style.borderRadius = "10px 10px 0 0";
+            banner.alt = "Marimo Banner";
+
+            const form = document.createElement("div");
+            form.className = "form-container";
+
+            for (const [key, value] of Object.entries(result)) {
+                const row = document.createElement("div");
+                row.className = "form-row";
+
+                const label = document.createElement("label");
+                label.textContent = key;
+
+                const valueContainer = document.createElement("div");
+                valueContainer.className = "value-container";
+
+                if (value.length > 100) {
+                    const preview = document.createElement("div");
+                    preview.className = "preview";
+                    preview.textContent = value.substring(0, 100) + "...";
+
+                    const fullText = document.createElement("div");
+                    fullText.className = "full-text";
+                    fullText.textContent = value;
+
+                    const toggleButton = document.createElement("button");
+                    toggleButton.className = "toggle-button";
+                    toggleButton.textContent = "Show More";
+                    toggleButton.onclick = () => {
+                        if (fullText.style.display === "none") {
+                            fullText.style.display = "block";
+                            preview.style.display = "none";
+                            toggleButton.textContent = "Show Less";
+                        } else {
+                            fullText.style.display = "none";
+                            preview.style.display = "block";
+                            toggleButton.textContent = "Show More";
+                        }
+                    };
+
+                    valueContainer.appendChild(preview);
+                    valueContainer.appendChild(fullText);
+                    valueContainer.appendChild(toggleButton);
+
+                    fullText.style.display = "none";
+                } else {
+                    valueContainer.textContent = value;
+                }
+
+                row.appendChild(label);
+                row.appendChild(valueContainer);
+                form.appendChild(row);
+            }
+
+            container.appendChild(banner);
+            container.appendChild(form);
+            el.appendChild(container);
+        }
+        export default { render };
+        """
+
+        _css = """
+        .header-container {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            max-width: 100%;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .banner {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .form-container {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            font-weight: 300;
+            box-shadow: 0 -10px 20px rgba(0,0,0,0.1);
+        }
+
+        .form-row {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .value-container {
+            font-size: 1em;
+            line-height: 1.5;
+        }
+
+        .preview, .full-text {
+            margin-bottom: 10px;
+        }
+
+        .toggle-button {
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .toggle-button:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        @media (max-width: 600px) {
+            .form-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        """
+
+        result = traitlets.Dict({}).tag(sync=True)
+    return HeaderWidget, anywidget, traitlets
+
+
+@app.cell(hide_code=True)
+def __(HeaderWidget):
+    header_widget = HeaderWidget(
+        result={
+            "Title": "Exploring Parkinson's Disease Diagnosis",
+            "Author": "H. Eugene",
+            "Contact": "eugeneheiner14@gmail.com",
+            "Date": "2024-09-25",
+            "Keywords": "Synthetic Data Generation, Variational AutoEncoder, Dimensionality Reduction, Machine Learningg",
+            "Data Sources": "https://www.kaggle.com/datasets/vikasukani/parkinsons-disease-data-set",
+            "Tools Used": "Polars, PyTorch, Plotly",
+            "Version": "0.1",
+        }
+    )
+    return (header_widget,)
+
+
+@app.cell(hide_code=True)
+def __():
+    # plotting Functions
     return
 
 
@@ -1330,7 +1488,7 @@ def __(go, pd, px):
             aspect="auto",
             color_continuous_scale="teal",
         ).update_layout(title="Correlation Heatmap of Features")
-    return correlation_heatmap,
+    return (correlation_heatmap,)
 
 
 @app.cell(hide_code=True)
@@ -1390,7 +1548,7 @@ def __(Lasso, go, np):
         )
 
         return fig
-    return plot_lasso_coefficients,
+    return (plot_lasso_coefficients,)
 
 
 @app.cell(hide_code=True)
@@ -1410,7 +1568,7 @@ def __(pd, px):
         ).update_traces(
             marker_size=1,
         )
-    return create_pairplot,
+    return (create_pairplot,)
 
 
 @app.cell(hide_code=True)
@@ -1459,7 +1617,7 @@ def __(go, np):
             violinmode="overlay",
         )
         return fig
-    return create_violin,
+    return (create_violin,)
 
 
 @app.cell(hide_code=True)
@@ -1484,7 +1642,7 @@ def __(ff, np):
             title="Overlaying density",
         )
         return fig
-    return create_distplot,
+    return (create_distplot,)
 
 
 @app.cell(hide_code=True)
@@ -1508,7 +1666,7 @@ def __(px):
                 yaxis_title="Loss",
             )
         )
-    return plot_train_loss,
+    return (plot_train_loss,)
 
 
 @app.cell(hide_code=True)
@@ -1564,20 +1722,13 @@ def __(pl, px):
         )
 
         return fig
-    return summary_plot,
+    return (summary_plot,)
 
 
 @app.cell(hide_code=True)
 def __():
-    NOTEBOOK_TITLE = "Exploring Parkinson's Disease Diagnosis"
-    DATA_PATH = "data/parkinsons.csv"
-    return DATA_PATH, NOTEBOOK_TITLE
-
-
-@app.cell(hide_code=True)
-def __(mo):
-    mo.md("# NEXT STEP ->").right()
-    return
+    DATA_PATH = "assets/parkinsons.csv"
+    return (DATA_PATH,)
 
 
 if __name__ == "__main__":

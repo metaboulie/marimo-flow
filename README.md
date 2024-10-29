@@ -1,8 +1,9 @@
 # marimo-flow
 
-**NOTICE**: This repo is my personal playground. If you want to contribute, join us [here](https://github.com/Haleshot/marimo-tutorials) and build something beautiful together.
+**NOTICE**: This repo is my personal backup. If you want to contribute, join us
+[here](https://github.com/Haleshot/marimo-tutorials) and build something
+beautiful together.
 
-## Use My Theme
+## More Themes For Marimo
 
-light.css
-dark.css
+[Marimo-Themes](https://github.com/metaboulie/marimo-themes)
